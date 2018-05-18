@@ -1,0 +1,90 @@
+<html>
+<head>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Share+Tech" rel="stylesheet">
+ 
+<!--<script type ="text/javascript" src="/socket.io/socket.io.js"></script>-->
+<script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+
+
+
+
+</head>
+<body>
+
+<div class="container">
+    <div class="row"> 
+    </div>
+</div>
+
+<script type="text/tpl" id="namespace-group-tpl">
+
+<div class="container">
+
+  <p id="time"></p>
+<hr />
+  <div class="row"></row>
+
+<h1>My rooms</h1>
+<hr/>
+<ul id="messages">
+</ul>
+
+
+</div>
+
+
+</script>
+
+<script>
+
+function createNamespace(socket, template){
+	
+  $el = template;
+
+  $('.row').append($el);
+ 
+  socket.on('seconds.update', function(data){
+  	var time = new Date(data.time);
+  	$('#time').text(
+  		time.getMonth() + '\/' + time.getDate() + '\/' +
+  		time.getFullYear() + ' ' + time.getHours() + ':' + 
+  		time.getMinutes() + ':' + time.getSeconds());
+  });
+
+  socket.on('list.rooms.response', function(rooms){
+
+    var room_list = [];
+
+  	$('#messages').html('');
+      Object.keys(rooms).forEach(function(room){
+        $('#messages').append(`<li>${room} | <a href="#" data-id="${room}">leave</a></li>`);
+      });
+  });
+    
+}
+
+$(function () {
+  var socket = io('http://localhost:5000');
+	var template = $('#namespace-group-tpl').text();
+	
+	createNamespace(socket,template);
+	socket.emit('list.rooms');
+  $('#messages').delegate('a', 'click', function(){
+    socket.emit('leave.room', $(this).data('id'));
+    socket.emit('list.rooms');
+  });
+
+});
+
+</script>
+
+</body>
+</html>
